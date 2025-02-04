@@ -1,0 +1,47 @@
+@page "/sources/edit/{id:guid?}"
+@using Microsoft.EntityFrameworkCore
+@inject NotificationService NotificationService
+@inject HighlightService HighlightService
+@inject AppDbContext AppDbContext
+
+@if (source is not null)
+{
+    <RadzenText TextStyle="TextStyle.H3">Edit source</RadzenText>
+    <RadzenTemplateForm Data="source" Submit="OnSave" TItem="Source">
+        <RadzenStack>
+            <RadzenFormField Text="Name">
+                <RadzenTextBox @bind-Value="source.Name" />
+            </RadzenFormField>
+            <RadzenFormField Text="JDBC String">
+                <RadzenTextBox @bind-Value="source.JdbcString" />
+            </RadzenFormField>
+            <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+
+@code
+{
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    Source? source;
+
+    override protected void OnInitialized()
+    {
+        if (Id is not null)
+        {
+            source = AppDbContext.Sources.SingleOrDefault(t => t.Id == Id);
+        }
+        else
+        {
+            source = new();
+        }
+    }
+
+    private void OnSave()
+    {
+        AppDbContext.Update(source);
+        AppDbContext.SaveChanges();
+    }
+}

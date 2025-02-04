@@ -1,0 +1,334 @@
+@page "/tests/edit/{id:guid?}"
+@using Microsoft.EntityFrameworkCore
+@inject NotificationService NotificationService
+@inject HighlightService HighlightService
+@inject AppDbContext AppDbContext
+
+@if (test is not null)
+{
+
+    <RadzenText TextStyle="TextStyle.H3">Edit test</RadzenText>
+    <RadzenTemplateForm Data="test" Submit="OnSave" TItem="Test">
+        <RadzenStack>
+            <RadzenFormField Text="Name">
+                <RadzenTextBox @bind-Value="test.Name" />
+            </RadzenFormField>
+            <RadzenFormField Text="Source">
+                <RadzenDropDown Data="sources" @bind-Value="test.Source" TextProperty="name" />
+            </RadzenFormField>
+            <RadzenFormField Text="Sink">
+                <RadzenDropDown Data="sinks" @bind-Value="test.Sink" TextProperty="name" />
+            </RadzenFormField>
+            <RadzenFormField Text="Query">
+                <RadzenTextArea @bind-Value="test.Query" />
+            </RadzenFormField>
+            <RadzenFormField Text="Patterns">
+                <RadzenDataGrid @ref="patternsGrid" Data="test.Patterns" EditMode="DataGridEditMode.Multiple" TItem="Pattern"
+                                RowUpdate="@PatternsOnUpdateRow" RowCreate="@PatternsOnCreateRow" Sort="@PatternsReset" Page="@PatternsReset" Filter="@PatternsReset">
+                    <HeaderTemplate>
+                        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle" Text="Add New Pattern" Click="@PatternsInsertRow" />
+                    </HeaderTemplate>
+                    <Columns>
+                        <RadzenDataGridColumn Title="Pattern ID">
+                            <Template Context="pattern">
+                                <RadzenText>@pattern.Id</RadzenText>
+                            </Template>
+                            <EditTemplate Context="pattern">
+                                <RadzenNumeric @bind-Value="pattern.Id" Min="1" Max="999999"></RadzenNumeric>
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="Source Code">
+                            <Template Context="pattern">
+                                <RadzenText style="white-space: pre-line;">
+                                    <CodeHighlight Code="@pattern.SourceCode" CodeLanguage="tsp-dsl"  />
+                                </RadzenText>
+                            </Template>
+                            <EditTemplate Context="pattern">
+                                <RadzenTextArea @bind-Value="pattern.SourceCode" Style="width: 100%;">
+                                </RadzenTextArea>
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Context="pattern" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                            <Template Context="pattern">
+                                <RadzenButton Icon="add_circle" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Shade="Shade.Lighter" Click="@(() => PatternsInsertAfterRow(pattern))" title="Add new row after this row" />
+                                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" Click="@(args => PatternsEditRow(pattern))" @onclick:stopPropagation="true" />
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.Medium" Shade="Shade.Lighter" class="rz-my-1 rz-ms-1" Click="@(args => PatternsDeleteRow(pattern))" @onclick:stopPropagation="true" />
+                            </Template>
+                            <EditTemplate Context="pattern">
+                                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => PatternsSaveRow(pattern))" aria-label="Save"/>
+                                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" Click="@((args) => PatternsCancelEdit(pattern))" aria-label="Cancel"/>
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.Medium" Shade="Shade.Lighter" class="rz-my-1 rz-ms-1" Click="@(args => PatternsDeleteRow(pattern))" aria-label="Delete" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenFormField>
+            <RadzenFieldset Text="Incidents">
+                <RadzenDataGrid @ref="incidentsGrid" Data="test.Incidents" EditMode="DataGridEditMode.Multiple" TItem="Incident"
+                                RowUpdate="@IncidentsOnUpdateRow" RowCreate="@IncidentsOnCreateRow" Sort="@IncidentsReset" Page="@IncidentsReset" Filter="@IncidentsReset">
+                    <HeaderTemplate>
+                        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle" Text="Add New Incident" Click="@IncidentsInsertRow" />
+                    </HeaderTemplate>
+                    <Columns>
+                        <RadzenDataGridColumn Title="Pattern ID">
+                            <Template Context="incident">
+                                <RadzenText>@incident.PatternId</RadzenText>
+                            </Template>
+                            <EditTemplate Context="incident">
+                                <RadzenDropDown Name="PatternId" TValue="int" Data="test.Patterns.Select(p => p.Id)" @bind-Value="incident.PatternId"></RadzenDropDown>
+                                <RadzenRequiredValidator DefaultValue=@(0) Component="PatternId" Text="Pattern ID must be set" Popup="true" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="From">
+                            <Template Context="incident">
+                                <RadzenText>@incident.From</RadzenText>
+                            </Template>
+                            <EditTemplate Context="incident">
+                                <RadzenDatePicker Name="FromDate" @bind-Value="incident.From" ShowTime="true" ShowSeconds="true"/>
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="To">
+                            <Template Context="incident">
+                                <RadzenText>@incident.To</RadzenText>
+                            </Template>
+                            <EditTemplate Context="incident">
+                                <RadzenDatePicker Name="ToDate" @bind-Value="incident.To" ShowTime="true" ShowSeconds="true"/>
+                                <RadzenCompareValidator Operator="CompareOperator.GreaterThanEqual" Component="ToDate" Value="incident.From" Text="From must not be less than to" Popup="true"/>
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Context="incident" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                            <Template Context="incident">
+                                <RadzenButton Icon="add_circle" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Shade="Shade.Lighter" Click="@(() => IncidentsInsertAfterRow(incident))" title="Add new row after this row"/>
+                                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" Click="@(args => IncidentsEditRow(incident))" @onclick:stopPropagation="true"/>
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.Medium" Shade="Shade.Lighter" class="rz-my-1 rz-ms-1" Click="@(args => IncidentsDeleteRow(incident))" @onclick:stopPropagation="true"/>
+                            </Template>
+                            <EditTemplate Context="incident">
+                                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => IncidentsSaveRow(incident))" aria-label="Save"/>
+                                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" Click="@((args) => IncidentsCancelEdit(incident))" aria-label="Cancel"/>
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.Medium" Shade="Shade.Lighter" class="rz-my-1 rz-ms-1" Click="@(args => IncidentsDeleteRow(incident))" aria-label="Delete"/>
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+                @* <RadzenButton Text="Import CSV"/> *@
+            </RadzenFieldset> 
+            <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+
+
+}
+
+@code
+{
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    Test? test;
+
+    RadzenDataGrid<Pattern> patternsGrid;
+    RadzenDataGrid<Incident> incidentsGrid;
+
+    List<Source> sources = [];
+    List<Sink> sinks = [];
+    
+    List<Pattern> patternsToInsert = [];
+    List<Pattern> patternsToUpdate = [];
+    
+    List<Incident> incidentsToInsert = [];
+    List<Incident> incidentsToUpdate = [];
+    
+    override protected void OnInitialized()
+    {
+        sources = AppDbContext.Sources.ToList();
+        sinks = AppDbContext.Sinks.ToList();
+        if (Id is not null)
+        {
+            test = AppDbContext.Tests
+                .Include(t => t.Source)
+                .Include(t => t.Sink)
+                .SingleOrDefault(t => t.Id == Id);
+        }
+        else
+        {
+            test = new() { Patterns = [], Incidents = [], DatetimeField = "ts" };
+        }
+    }
+
+    void PatternsReset()
+    {
+        patternsToInsert.Clear();
+        patternsToUpdate.Clear();
+    }
+
+    void PatternsReset(Pattern pattern)
+    {
+        patternsToInsert.Remove(pattern);
+        patternsToUpdate.Remove(pattern);
+    }
+    
+    async Task PatternsEditRow(Pattern pattern)
+    {
+        if (!patternsGrid.IsValid) return;
+
+        patternsToUpdate.Add(pattern);
+        await patternsGrid.EditRow(pattern);
+    }
+
+    void PatternsOnUpdateRow(Pattern pattern)
+    {
+        PatternsReset(pattern);
+    }
+
+    async Task PatternsSaveRow(Pattern pattern)
+    {
+        await patternsGrid.UpdateRow(pattern);
+    }
+
+    void PatternsCancelEdit(Pattern pattern)
+    {
+        PatternsReset(pattern);
+
+        patternsGrid.CancelEditRow(pattern);
+
+        var patternEntry = AppDbContext.Entry(pattern);
+        if (patternEntry.State == EntityState.Modified)
+        {
+            patternEntry.CurrentValues.SetValues(patternEntry.OriginalValues);
+            patternEntry.State = EntityState.Unchanged;
+        }
+    }
+
+    async Task PatternsDeleteRow(Pattern pattern)
+    {
+        PatternsReset(pattern);
+
+        if (test.Patterns.Contains(pattern))
+        {
+            test.Patterns.Remove(pattern);
+            await patternsGrid.Reload();
+        }
+        else
+        {
+            patternsGrid.CancelEditRow(pattern);
+            await patternsGrid.Reload();
+        }
+    }
+
+    async Task PatternsInsertRow()
+    {
+        if (!patternsGrid.IsValid) return;
+
+        var pattern = new Pattern();
+        patternsToInsert.Add(pattern);
+        await patternsGrid.InsertRow(pattern);
+    }
+
+    async Task PatternsInsertAfterRow(Pattern row)
+    {
+        if (!patternsGrid.IsValid) return;
+
+        var pattern = new Pattern();
+        patternsToInsert.Add(pattern);
+        await patternsGrid.InsertAfterRow(pattern, row);
+    }
+
+    void PatternsOnCreateRow(Pattern pattern)
+    {
+        test.Patterns.Add(pattern);
+        patternsToInsert.Remove(pattern);
+    }
+    
+    void IncidentsReset()
+    {
+        incidentsToInsert.Clear();
+        incidentsToUpdate.Clear();
+    }
+
+    void IncidentsReset(Incident incident)
+    {
+        incidentsToInsert.Remove(incident);
+        incidentsToUpdate.Remove(incident);
+    }
+    
+    async Task IncidentsEditRow(Incident incident)
+    {
+        if (!incidentsGrid.IsValid) return;
+
+        incidentsToUpdate.Add(incident);
+        await incidentsGrid.EditRow(incident);
+    }
+
+    void IncidentsOnUpdateRow(Incident incident)
+    {
+        IncidentsReset(incident);
+    }
+
+    async Task IncidentsSaveRow(Incident incident)
+    {
+        await incidentsGrid.UpdateRow(incident);
+    }
+
+    void IncidentsCancelEdit(Incident incident)
+    {
+        IncidentsReset(incident);
+
+        incidentsGrid.CancelEditRow(incident);
+
+        var incidentEntry = AppDbContext.Entry(incident);
+        if (incidentEntry.State == EntityState.Modified)
+        {
+            incidentEntry.CurrentValues.SetValues(incidentEntry.OriginalValues);
+            incidentEntry.State = EntityState.Unchanged;
+        }
+    }
+
+    async Task IncidentsDeleteRow(Incident incident)
+    {
+        IncidentsReset(incident);
+
+        if (test.Incidents.Contains(incident))
+        {
+            test.Incidents.Remove(incident);
+            await incidentsGrid.Reload();
+        }
+        else
+        {
+            incidentsGrid.CancelEditRow(incident);
+            await incidentsGrid.Reload();
+        }
+    }
+
+    async Task IncidentsInsertRow()
+    {
+        if (!incidentsGrid.IsValid) return;
+
+        var incident = new Incident();
+        incidentsToInsert.Add(incident);
+        await incidentsGrid.InsertRow(incident);
+    }
+
+    async Task IncidentsInsertAfterRow(Incident row)
+    {
+        if (!incidentsGrid.IsValid) return;
+
+        var incident = new Incident();
+        incidentsToInsert.Add(incident);
+        await incidentsGrid.InsertAfterRow(incident, row);
+    }
+
+    void IncidentsOnCreateRow(Incident incident)
+    {
+        incident.From = DateTime.SpecifyKind(incident.From, DateTimeKind.Utc);
+        incident.To = DateTime.SpecifyKind(incident.To, DateTimeKind.Utc);
+        test.Incidents.Add(incident);
+        incidentsToInsert.Remove(incident);
+    }
+
+    private void OnSave()
+    {
+        Console.WriteLine($"PATTERNS {test.Patterns.Count} INCIDENTS {test.Incidents.Count}");
+        AppDbContext.Update(test);
+        AppDbContext.SaveChanges();
+    }
+}

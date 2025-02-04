@@ -1,0 +1,50 @@
+@page "/sinks/edit/{id:guid?}"
+@using Microsoft.EntityFrameworkCore
+@inject NotificationService NotificationService
+@inject HighlightService HighlightService
+@inject AppDbContext AppDbContext
+
+@if (sink is not null)
+{
+    <RadzenText TextStyle="TextStyle.H3">Edit sink</RadzenText>
+    <RadzenTemplateForm Data="sink" Submit="OnSave" TItem="Sink">
+        <RadzenStack>
+            <RadzenFormField Text="Name">
+                <RadzenTextBox @bind-Value="sink.Name" />
+            </RadzenFormField>
+            <RadzenFormField Text="JDBC String">
+                <RadzenTextBox @bind-Value="sink.JdbcString" />
+            </RadzenFormField>
+            <RadzenFormField Text="Table Name">
+                <RadzenTextBox @bind-Value="sink.TableName" />
+            </RadzenFormField>
+            <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+
+@code
+{
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    Sink? sink;
+
+    override protected void OnInitialized()
+    {
+        if (Id is not null)
+        {
+            sink = AppDbContext.Sinks.SingleOrDefault(t => t.Id == Id);
+        }
+        else
+        {
+            sink = new();
+        }
+    }
+
+    private void OnSave()
+    {
+        AppDbContext.Update(sink);
+        AppDbContext.SaveChanges();
+    }
+}

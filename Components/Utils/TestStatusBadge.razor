@@ -1,0 +1,17 @@
+<RadzenBadge IsPill="true" Text="@Status.ToString()" BadgeStyle="StatusStyle" />
+
+@code
+{
+    [Parameter]
+    public TestRunStatus Status { get; set; }
+
+    public BadgeStyle StatusStyle => Status switch
+    {
+        TestRunStatus.Created => BadgeStyle.Info,
+        TestRunStatus.Running => BadgeStyle.Primary,
+        TestRunStatus.Error => BadgeStyle.Danger,
+        TestRunStatus.Success => BadgeStyle.Success,
+        TestRunStatus.Failed => BadgeStyle.Warning,
+        _ => BadgeStyle.Dark
+    };
+}

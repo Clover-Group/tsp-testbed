@@ -1,0 +1,75 @@
+@page "/tests/{id:guid}"
+@using Microsoft.EntityFrameworkCore
+@inject NotificationService NotificationService
+@inject AppDbContext AppDbContext
+
+@if (test is not null)
+{
+    <RadzenLink Path="/tests">
+    <RadzenButton Icon="arrow_back" Text="Back to list" />
+</RadzenLink>
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.DisplayH5">@test.Name</RadzenText>
+        <RadzenStack>
+            <RadzenText>From: <b>@test.Source.Name</b></RadzenText>
+            <RadzenText>To: <b>@test.Sink.Name</b></RadzenText>
+            <RadzenFieldset Text="Query">
+                <CodeHighlight Code="@test.Query" CodeLanguage="sql" />
+            </RadzenFieldset>
+            <RadzenFieldset Text="Patterns">
+                <RadzenDataList Data="test.Patterns">
+                    <Template Context="pattern">
+                        <RadzenStack>
+                            <RadzenText>ID <b>@pattern.Id</b></RadzenText>
+                            <CodeHighlight Code="@pattern.SourceCode" CodeLanguage="tsp-dsl" />
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataList>
+            </RadzenFieldset>
+            <RadzenFieldset Text="Run history">
+                <RadzenDataGrid Data="test.Runs" PageSize="20" ShowPagingSummary="true" AllowPaging="true">
+                    <Columns>
+                        <RadzenDataGridColumn Title="ID">
+                            <Template Context="run">
+                                <RadzenLink Path=@($"/runs/{run.Id}") Text=@(run.Id.ToString()) />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="Started">
+                            <Template Context="run">
+                                @(run.Started)
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="Running time">
+                            <Template Context="run">
+                                @(run.RunningTime)
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="Status">
+                            <Template Context="run">
+                                <TestStatusBadge Status="@run.Status" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenFieldset>
+        </RadzenStack>
+
+    </RadzenCard>
+}
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+
+    Test? test;
+
+    override protected void OnInitialized()
+    {
+        test = AppDbContext.Tests
+        .Include(t => t.Source)
+        .Include(t => t.Sink)
+        .Include(t => t.Runs)
+        .FirstOrDefault(t => t.Id == Id);
+    }
+}

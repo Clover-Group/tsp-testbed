@@ -1,0 +1,74 @@
+@page "/data"
+@inject AppDbContext AppDbContext
+
+<RadzenText TextStyle="TextStyle.H3">
+    Data
+</RadzenText>
+
+<RadzenText TextStyle="TextStyle.H5">
+    Sources
+</RadzenText>
+
+<RadzenLink Path="sources/edit">
+    <RadzenButton Text="Create" Icon="add_circle" />
+</RadzenLink>
+<RadzenDataList Data="sources" PageSize="10" ShowPagingSummary="true">
+    <Template Context="source">
+        <RadzenCard>
+            <RadzenStack>
+                <RadzenText TextStyle="TextStyle.H6">
+                    @source.Name
+                </RadzenText>
+                <RadzenText>
+                    Source ID: <b>@source.Id</b>
+                </RadzenText>
+                <RadzenText>
+                    JDBC URL: <b>@source.JdbcString</b>
+                </RadzenText>
+                <RadzenLink Path=@($"sources/edit/{source.Id}")>
+                    <RadzenButton Text="Edit" Icon="edit" />
+                </RadzenLink>
+            </RadzenStack>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+<RadzenText TextStyle="TextStyle.H5">
+    Sinks
+</RadzenText>
+
+<RadzenLink Path="sinks/edit">
+    <RadzenButton Text="Create" Icon="add_circle" />
+</RadzenLink>
+<RadzenDataList Data="sinks" PageSize="10" ShowPagingSummary="true">
+    <Template Context="sink">
+        <RadzenCard>
+            <RadzenStack>
+                <RadzenText TextStyle="TextStyle.H6">
+                    @sink.Name
+                </RadzenText>
+                <RadzenText>
+                    Sink ID: <b>@sink.Id</b>
+                </RadzenText>
+                <RadzenText>
+                    JDBC URL: <b>@sink.JdbcString</b>
+                </RadzenText>
+                <RadzenLink Path=@($"sinks/edit/{sink.Id}")>
+                    <RadzenButton Text="Edit" Icon="edit" />
+                </RadzenLink>
+            </RadzenStack>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+@code
+{
+    IQueryable<Source> sources;
+    IQueryable<Sink> sinks;
+
+    override protected void OnInitialized()
+    {
+        sources = AppDbContext.Sources;
+        sinks = AppDbContext.Sinks;
+    }
+}
