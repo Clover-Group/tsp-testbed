@@ -1,0 +1,62 @@
+@page "/data"
+@inject AppDbContext AppDbContext
+
+<RadzenText TextStyle="TextStyle.H3">
+    Data
+</RadzenText>
+
+<RadzenText TextStyle="TextStyle.H5">
+    Sources
+</RadzenText>
+
+<RadzenDataList Data="sources" PageSize="10" ShowPagingSummary="true">
+    <Template Context="source">
+        <RadzenCard>
+            <RadzenStack>
+                <RadzenText>
+                    Source ID: <b>@source.Id</b>
+                </RadzenText>
+                <RadzenText>
+                    JDBC URL: <b>@source.JdbcString</b>
+                </RadzenText>
+                <RadzenLink Path=@($"sources/{source.Id}/edit")>
+                    <RadzenButton Text="Edit" Icon="edit" />
+                </RadzenLink>
+            </RadzenStack>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+<RadzenText TextStyle="TextStyle.H5">
+    Sinks
+</RadzenText>
+
+<RadzenDataList Data="sinks" PageSize="10" ShowPagingSummary="true">
+    <Template Context="sink">
+        <RadzenCard>
+            <RadzenStack>
+                <RadzenText>
+                    Sink ID: <b>@sink.Id</b>
+                </RadzenText>
+                <RadzenText>
+                    JDBC URL: <b>@sink.JdbcString</b>
+                </RadzenText>
+                <RadzenLink Path=@($"sinks/{sink.Id}/edit")>
+                    <RadzenButton Text="Edit" Icon="edit" />
+                </RadzenLink>
+            </RadzenStack>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+@code
+{
+    IQueryable<Source> sources;
+    IQueryable<Sink> sinks;
+
+    override protected void OnInitialized()
+    {
+        sources = AppDbContext.Sources;
+        sinks = AppDbContext.Sinks;
+    }
+}

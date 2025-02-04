@@ -1,0 +1,62 @@
+@page "/tests"
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+@inject AppDbContext AppDbContext
+@inject RunStatusService RunStatusService
+
+<RadzenText TextStyle="TextStyle.H3">
+    Tests
+</RadzenText>
+
+<RadzenDataList Data="tests" PageSize="10" ShowPagingSummary="true">
+    <Template Context="test">
+        <RadzenCard>
+            <RadzenStack>
+                <RadzenText TextStyle="TextStyle.H6">
+                    @test.Name
+                </RadzenText>
+                <RadzenText>
+                    Test ID:
+                    <RadzenLink Path=@($"/tests/{test.Id}") Text=@(test.Id.ToString()) />
+                </RadzenText>
+                <RadzenText>
+                    Source:
+                    <RadzenLink Path=@($"/sources/{test.Source.Id}") Text=@(test.Source.Name) />
+                    Sink:
+                    <RadzenLink Path=@($"/sources/{test.Sink.Id}") Text=@(test.Sink.Name) />
+                </RadzenText>
+                <RadzenText>
+                    Total patterns: <b>@test.Patterns.Count</b>
+                </RadzenText>
+                <RadzenText>
+                    Total expected incidents: <b>@test.Incidents.Count</b>
+                </RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenLink Path=@($"tests/{test.Id}/edit")>
+                        <RadzenButton Text="Edit" Icon="edit" />
+                    </RadzenLink>
+                    <RadzenButton Text="Run" Icon="play_arrow" ButtonStyle="ButtonStyle.Success"
+                        Click="args => OnTestRun(test)" />
+                </RadzenStack>
+            </RadzenStack>
+
+
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+@code
+{
+    IQueryable<Test> tests;
+
+    override protected void OnInitialized()
+    {
+        tests = AppDbContext.Tests.Include(t => t.Source).Include(t => t.Sink);
+    }
+
+    async void OnTestRun(Test test)
+    {
+        var runId = await RunStatusService.RunTest(test.Id);
+        NavigationManager.NavigateTo($"runs/{runId}");
+    }
+}

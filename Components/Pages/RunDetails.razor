@@ -1,0 +1,36 @@
+@page "/runs/{id:guid}"
+@using Microsoft.EntityFrameworkCore
+@inject NotificationService NotificationService
+@inject AppDbContext AppDbContext
+
+<RadzenCard>
+    <RadzenText>Run @run.Id</RadzenText>
+    <RadzenText>
+        Test:
+        <RadzenLink Text="@run.Test.Name" Path=@($"/tests/{run.Test.Id}") />
+    </RadzenText>
+    <RadzenText>
+        Status:
+        <TestStatusBadge Status="@run.Status" />
+    </RadzenText>
+    <RadzenText>
+        Started on: @run.Started<br>
+        Ran for @run.RunningTime
+    </RadzenText>
+</RadzenCard>
+
+@code
+{
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    TestRun? run;
+
+    override protected void OnInitialized()
+    {
+        run = AppDbContext.TestRuns
+        .Include(r => r.Test)
+        .FirstOrDefault(t => t.Id == Id);
+    }
+}

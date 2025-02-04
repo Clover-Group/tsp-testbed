@@ -1,0 +1,47 @@
+@page "/history"
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext AppDbContext
+
+<RadzenText TextStyle="TextStyle.H3">
+    History
+</RadzenText>
+
+<RadzenDataGrid Data="testRuns" PageSize="20" ShowPagingSummary="true" AllowPaging="true">
+    <Columns>
+        <RadzenDataGridColumn Title="ID">
+            <Template Context="run">
+                <RadzenLink Path=@($"/runs/{run.Id}") Text=@(run.Id.ToString()) />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Test ID">
+            <Template Context="run">
+                <RadzenLink Path=@($"/tests/{run.Test.Id}") Text=@(run.Test.Id.ToString()) />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Started">
+            <Template Context="run">
+                @(run.Started)
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Running time">
+            <Template Context="run">
+                @(run.RunningTime)
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Status">
+            <Template Context="run">
+                <TestStatusBadge Status="@run.Status" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code
+{
+    IQueryable<TestRun> testRuns;
+
+    override protected void OnInitialized()
+    {
+        testRuns = AppDbContext.TestRuns.Include(r => r.Test);
+    }
+}
