@@ -4,6 +4,7 @@ using Radzen;
 using TspTestbed.Components;
 using TspTestbed.Data;
 using TspTestbed.Services;
+using TspTestbed.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddRadzenComponents();
+
+builder.Services.AddScoped<BrowserTimeProvider>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

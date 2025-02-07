@@ -3,27 +3,86 @@
 @inject NotificationService NotificationService
 @inject AppDbContext AppDbContext
 
-<RadzenCard>
-    <RadzenText>Run @run.Id</RadzenText>
-    <RadzenText>
-        Test:
-        <RadzenLink Text="@run.Test.Name" Path=@($"/tests/{run.Test.Id}") />
-    </RadzenText>
-    <RadzenText>
-        Status:
-        <TestStatusBadge Status="@run.Status" />
-    </RadzenText>
-    <RadzenText>
-        Started on: @run.Started<br>
-        Ran for @run.RunningTime
-    </RadzenText>
-</RadzenCard>
+@if (run is not null)
+{
+    <RadzenCard>
+        <RadzenText>Run @run.Id</RadzenText>
+        <RadzenText>
+            Test:
+            <RadzenLink Text="@run.Test.Name" Path=@($"/tests/{run.Test.Id}") />
+        </RadzenText>
+        <RadzenText>
+            Status:
+            <TestStatusBadge Status="@run.Status" />
+        </RadzenText>
+        <RadzenText>
+            Started on:
+            <LocalTime DateTime="run.Started" /><br>
+            Ran for @run.RunningTime
+        </RadzenText>
+        <RadzenRow>
+            <RadzenColumn>
+                <RadzenText TextStyle="TextStyle.H6">Expected incidents</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn>
+                <RadzenText TextStyle="TextStyle.H6">Found incidents</RadzenText>
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow>
+            <RadzenColumn>
+                <RadzenDataGrid Data="@expected" CellRender="ExpectedCellRender">
+                    <Columns>
+                        <RadzenDataGridColumn Title="Pattern ID">
+                            <Template Context="incident">
+                                <RadzenText>@incident.PatternId</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="From">
+                            <Template Context="incident">
+                                <RadzenText>@incident.From</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="To">
+                            <Template Context="incident">
+                                <RadzenText>@incident.To</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenColumn>
+            <RadzenColumn>
+                <RadzenDataGrid Data="@found" CellRender="FoundCellRender">
+                    <Columns>
+                        <RadzenDataGridColumn Title="Pattern ID">
+                            <Template Context="incident">
+                                <RadzenText>@incident.PatternId</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="From">
+                            <Template Context="incident">
+                                <RadzenText>@incident.From</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="To">
+                            <Template Context="incident">
+                                <RadzenText>@incident.To</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenColumn>
+        </RadzenRow>
+
+    </RadzenCard>
+}
 
 @code
 {
 
     [Parameter]
     public Guid Id { get; set; }
+
+    List<Incident> expected = [], found = [];
 
     TestRun? run;
 
@@ -32,5 +91,24 @@
         run = AppDbContext.TestRuns
         .Include(r => r.Test)
         .FirstOrDefault(t => t.Id == Id);
+        if (run is not null)
+        {
+            expected = run.Test.Incidents?.OrderBy(x => x.PatternId)?.ThenBy(x => x.From)?.ThenBy(x => x.To)?.ToList() ?? [];
+            found = run.FoundIncidents?.OrderBy(x => x.PatternId)?.ThenBy(x => x.From)?.ThenBy(x => x.To)?.ToList() ?? [];
+        }
+    }
+
+    void ExpectedCellRender(DataGridCellRenderEventArgs<Incident> args)
+    {
+        string color = found.Contains(args.Data) ? "--rz-base-background-color" : "--rz-danger-lighter";
+        string style = $"background-color: var({color});";
+        args.Attributes.Add("style", style);
+    }
+
+    void FoundCellRender(DataGridCellRenderEventArgs<Incident> args)
+    {
+        string color = expected.Contains(args.Data) ? "--rz-base-background-color" : "--rz-success-lighter";
+        string style = $"background-color: var({color});";
+        args.Attributes.Add("style", style);
     }
 }

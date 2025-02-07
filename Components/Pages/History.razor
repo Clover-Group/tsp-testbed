@@ -20,7 +20,7 @@
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Title="Started">
             <Template Context="run">
-                @(run.Started)
+                <LocalTime DateTime="run.Started" />
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Title="Running time">
@@ -42,6 +42,6 @@
 
     override protected void OnInitialized()
     {
-        testRuns = AppDbContext.TestRuns.Include(r => r.Test);
+        testRuns = AppDbContext.TestRuns.OrderByDescending(r => r.Started).Include(r => r.Test);
     }
 }
