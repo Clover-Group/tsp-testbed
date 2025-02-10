@@ -327,7 +327,9 @@
 
     private void OnSave()
     {
-        Console.WriteLine($"PATTERNS {test.Patterns.Count} INCIDENTS {test.Incidents.Count}");
+        // clear patterns and incidents of null values
+        test.Patterns.RemoveAll(p => p is null);
+        test.Incidents.RemoveAll(i => i is null);
         AppDbContext.Update(test);
         AppDbContext.SaveChanges();
     }
