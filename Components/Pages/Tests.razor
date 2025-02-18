@@ -61,6 +61,6 @@
     async void OnTestRun(Test test)
     {
         var runId = await RunStatusService.RunTest(test.Id);
-        NavigationManager.NavigateTo($"runs/{runId}");
+        NavigationManager.NavigateTo($"runs/{runId}", true);
     }
 }

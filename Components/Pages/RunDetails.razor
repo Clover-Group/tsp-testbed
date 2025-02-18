@@ -1,6 +1,8 @@
 @page "/runs/{id:guid}"
+@implements IDisposable
 @using Microsoft.EntityFrameworkCore
 @inject NotificationService NotificationService
+@inject RunStatusService RunStatusService
 @inject AppDbContext AppDbContext
 
 @if (run is not null)
@@ -86,16 +88,23 @@
 
     TestRun? run;
 
-    override protected void OnInitialized()
+    void UpdateRunData()
     {
         run = AppDbContext.TestRuns
+        .AsNoTracking()
         .Include(r => r.Test)
-        .FirstOrDefault(t => t.Id == Id);
+        .FirstOrDefault(r => r.Id == Id);
         if (run is not null)
         {
             expected = run.Test.Incidents?.OrderBy(x => x.PatternId)?.ThenBy(x => x.From)?.ThenBy(x => x.To)?.ToList() ?? [];
             found = run.FoundIncidents?.OrderBy(x => x.PatternId)?.ThenBy(x => x.From)?.ThenBy(x => x.To)?.ToList() ?? [];
         }
+    }
+
+    override protected void OnInitialized()
+    {
+        UpdateRunData();
+        RunStatusService.StatusChanged += OnStatusChanged;
     }
 
     void ExpectedCellRender(DataGridCellRenderEventArgs<Incident> args)
@@ -110,5 +119,20 @@
         string color = expected.Contains(args.Data) ? "--rz-base-background-color" : "--rz-success-lighter";
         string style = $"background-color: var({color});";
         args.Attributes.Add("style", style);
+    }
+
+    public void Dispose()
+    {
+        RunStatusService.StatusChanged -= OnStatusChanged;
+    }
+
+    public async Task OnStatusChanged(object? sender, Guid guid)
+    {
+        if (Id == guid)
+        {
+            UpdateRunData();
+            await InvokeAsync(StateHasChanged);
+            await Task.Yield();
+        }
     }
 }

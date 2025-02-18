@@ -1,5 +1,6 @@
 @page "/tests/edit/{id:guid?}"
 @using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
 @inject HighlightService HighlightService
 @inject AppDbContext AppDbContext
@@ -328,9 +329,21 @@
     private void OnSave()
     {
         // clear patterns and incidents of null values
-        test.Patterns.RemoveAll(p => p is null);
-        test.Incidents.RemoveAll(i => i is null);
-        AppDbContext.Update(test);
-        AppDbContext.SaveChanges();
+        try
+        {
+            test.Patterns.RemoveAll(p => p is null);
+            test.Incidents.RemoveAll(i => i is null);
+            AppDbContext.Update(test);
+            AppDbContext.SaveChanges();
+            NavigationManager.NavigateTo("/tests");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage {
+                Severity = NotificationSeverity.Error,
+                Detail = ex.Message,
+                Summary = "Error occured while saving"
+            });
+        }
     }
 }

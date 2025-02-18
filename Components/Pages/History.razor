@@ -1,10 +1,33 @@
 @page "/history"
+@implements IDisposable
 @using Microsoft.EntityFrameworkCore
 @inject AppDbContext AppDbContext
+@inject RunStatusService RunStatusService
 
 <RadzenText TextStyle="TextStyle.H3">
     History
 </RadzenText>
+
+<RadzenFieldset Text="Show">
+    <RadzenRadioButtonList Value=@range Change=@(args => OnRangeChanged(args)) TValue="TimeSpan">
+        <Items>
+            <RadzenRadioButtonListItem Text="1 hour" Value="TimeSpan.FromHours(1)" />
+            <RadzenRadioButtonListItem Text="6 hours" Value="TimeSpan.FromHours(6)" />
+            <RadzenRadioButtonListItem Text="24 hours" Value="TimeSpan.FromHours(24)" />
+            <RadzenRadioButtonListItem Text="7 days" Value="TimeSpan.FromDays(7)" />
+            <RadzenRadioButtonListItem Text="30 days" Value="TimeSpan.FromDays(30)" />
+            <RadzenRadioButtonListItem Text="365 days" Value="TimeSpan.FromDays(365)" />
+        </Items>
+    </RadzenRadioButtonList>
+    <RadzenStack Orientation="Orientation.Horizontal" Class="align-items-center"
+        Style="display: flex; gap: 20px; align-items:center;">
+        <RadzenText>Custom:</RadzenText>
+        <RadzenNumeric Min="0" Max="9999" Value=@range.Days Name="days-input" Change="OnDaysChanged" TValue="int" />
+        <RadzenLabel Component="days-input" Text="days" />
+        <RadzenNumeric Min="0" Max="23" Value=@range.Hours Name="hours-input" Change="OnHoursChanged" TValue="int" />
+        <RadzenLabel Component="hours-input" Text="hours" />
+    </RadzenStack>
+</RadzenFieldset>
 
 <RadzenDataGrid Data="testRuns" PageSize="20" ShowPagingSummary="true" AllowPaging="true">
     <Columns>
@@ -40,8 +63,47 @@
 {
     IQueryable<TestRun> testRuns;
 
+    TimeSpan range = TimeSpan.FromDays(30);
+
+    void UpdateTestRuns()
+    {
+        testRuns = AppDbContext.TestRuns.AsNoTracking().Where(r => DateTime.UtcNow - r.Started < range).OrderByDescending(r =>
+        r.Started).Include(r => r.Test);
+    }
+
     override protected void OnInitialized()
     {
-        testRuns = AppDbContext.TestRuns.OrderByDescending(r => r.Started).Include(r => r.Test);
+        UpdateTestRuns();
+        RunStatusService.StatusChanged += OnStatusChanged;
+    }
+
+    async Task OnStatusChanged(object? sender, Guid guid)
+    {
+        UpdateTestRuns();
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+    }
+
+    void OnRangeChanged(TimeSpan newRange)
+    {
+        range = newRange;
+        UpdateTestRuns();
+    }
+
+    void OnDaysChanged(int newDays)
+    {
+        range += TimeSpan.FromDays(newDays - range.Days);
+        UpdateTestRuns();
+    }
+
+    void OnHoursChanged(int newHours)
+    {
+        range += TimeSpan.FromHours(newHours - range.Hours);
+        UpdateTestRuns();
+    }
+
+    public void Dispose()
+    {
+        RunStatusService.StatusChanged -= OnStatusChanged;
     }
 }

@@ -36,6 +36,8 @@ public class RunStatusService : BackgroundService
 
     private readonly Uri coordinatorUri;
 
+    public event Func<object, Guid, Task> StatusChanged;
+
     public RunStatusService(IConfiguration configuration, ILogger<RunStatusService> logger, IServiceProvider services)
     {
         this.configuration = configuration;
@@ -51,6 +53,7 @@ public class RunStatusService : BackgroundService
         consumer = new ConsumerBuilder<string, string>(config).Build();
         var topic = configuration.GetSection("Coordinator").GetValue<string>("JobStatusTopic");
         consumer.Subscribe(topic);
+        StatusChanged += (s, e) => LogInvoke(e);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -178,6 +181,7 @@ public class RunStatusService : BackgroundService
             run.Status = TestRunStatus.Error;
         }
         appDbContext.SaveChanges();
+        StatusChanged?.Invoke(this, runId);
         return runId;
     }
 
@@ -242,6 +246,7 @@ public class RunStatusService : BackgroundService
             }
             run.RunningTime = timestamp - run.Started;
             appDbContext.SaveChanges();
+            StatusChanged?.Invoke(this, run.Id);
         }
     }
 
@@ -260,5 +265,10 @@ public class RunStatusService : BackgroundService
         var orderedExpected = expected.OrderBy(x => x.PatternId).ThenBy(x => x.From).ThenBy(x => x.To).ToList();
         var orderedActual = actual.OrderBy(x => x.PatternId).ThenBy(x => x.From).ThenBy(x => x.To).ToList();
         return orderedExpected.SequenceEqual(orderedActual);
+    }
+
+    private async Task LogInvoke(Guid guid)
+    {
+        logger.LogInformation("Status changed info fired for {Id}", guid);
     }
 }
