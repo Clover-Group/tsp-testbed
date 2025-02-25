@@ -41,12 +41,12 @@
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Title="From">
                             <Template Context="incident">
-                                <RadzenText>@incident.From</RadzenText>
+                                <RadzenText>@incident.From.ToString("dd.MM.yyyy HH:mm:ss")</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Title="To">
                             <Template Context="incident">
-                                <RadzenText>@incident.To</RadzenText>
+                                <RadzenText>@incident.To.ToString("dd.MM.yyyy HH:mm:ss")</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
                     </Columns>
@@ -62,12 +62,12 @@
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Title="From">
                             <Template Context="incident">
-                                <RadzenText>@incident.From</RadzenText>
+                                <RadzenText>@incident.From.ToString("dd.MM.yyyy HH:mm:ss")</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Title="To">
                             <Template Context="incident">
-                                <RadzenText>@incident.To</RadzenText>
+                                <RadzenText>@incident.To.ToString("dd.MM.yyyy HH:mm:ss")</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
                     </Columns>

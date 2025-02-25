@@ -21,7 +21,7 @@ public sealed class LocalTime : ComponentBase, IDisposable
     {
         if (DateTime != null)
         {
-            builder.AddContent(0, TimeProvider.ToLocalDateTime(DateTime.Value));
+            builder.AddContent(0, TimeProvider.ToLocalDateTime(DateTime.Value).ToString("dd.MM.yyyy HH:mm:ss"));
         }
     }
 

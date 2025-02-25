@@ -76,24 +76,24 @@
                                 <RadzenText>@incident.PatternId</RadzenText>
                             </Template>
                             <EditTemplate Context="incident">
-                                <RadzenDropDown Name="PatternId" TValue="int" Data="test.Patterns.Select(p => p.Id)" @bind-Value="incident.PatternId"></RadzenDropDown>
+                                <RadzenDropDown Name="PatternId" TValue="int" Data="test.Patterns.Select(p => p.Id)" @bind-Value="incident.PatternId" Style="width: max-content"></RadzenDropDown>
                                 <RadzenRequiredValidator DefaultValue=@(0) Component="PatternId" Text="Pattern ID must be set" Popup="true" />
                             </EditTemplate>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Title="From">
                             <Template Context="incident">
-                                <RadzenText>@incident.From</RadzenText>
+                                <RadzenText>@incident.From.ToString("dd.MM.yyyy HH:mm:ss")</RadzenText>
                             </Template>
                             <EditTemplate Context="incident">
-                                <RadzenDatePicker Name="FromDate" @bind-Value="incident.From" ShowTime="true" ShowSeconds="true"/>
+                                <RadzenDatePicker Name="FromDate" @bind-Value="incident.From" ShowTime="true" ShowSeconds="true" DateFormat="dd.MM.yyyy HH:mm:ss"/>
                             </EditTemplate>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Title="To">
                             <Template Context="incident">
-                                <RadzenText>@incident.To</RadzenText>
+                                <RadzenText>@incident.To.ToString("dd.MM.yyyy HH:mm:ss")</RadzenText>
                             </Template>
                             <EditTemplate Context="incident">
-                                <RadzenDatePicker Name="ToDate" @bind-Value="incident.To" ShowTime="true" ShowSeconds="true"/>
+                                <RadzenDatePicker Name="ToDate" @bind-Value="incident.To" ShowTime="true" ShowSeconds="true" DateFormat="dd.MM.yyyy HH:mm:ss"/>
                                 <RadzenCompareValidator Operator="CompareOperator.GreaterThanEqual" Component="ToDate" Value="incident.From" Text="From must not be less than to" Popup="true"/>
                             </EditTemplate>
                         </RadzenDataGridColumn>
