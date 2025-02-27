@@ -27,7 +27,8 @@
                 </RadzenDataList>
             </RadzenFieldset>
             <RadzenFieldset Text="Run history">
-                <RadzenDataGrid Data="test.Runs" PageSize="20" ShowPagingSummary="true" AllowPaging="true">
+                <RadzenDataGrid Data="test.Runs.OrderByDescending(r => r.Started)" PageSize="20" ShowPagingSummary="true"
+                    AllowPaging="true">
                     <Columns>
                         <RadzenDataGridColumn Title="ID">
                             <Template Context="run">
