@@ -109,14 +109,14 @@
 
     void ExpectedCellRender(DataGridCellRenderEventArgs<Incident> args)
     {
-        string color = found.Contains(args.Data) ? "--rz-base-background-color" : "--rz-danger-lighter";
+        string color = found.Contains(args.Data) ? "--rz-success-lighter" : "--rz-danger-lighter";
         string style = $"background-color: var({color});";
         args.Attributes.Add("style", style);
     }
 
     void FoundCellRender(DataGridCellRenderEventArgs<Incident> args)
     {
-        string color = expected.Contains(args.Data) ? "--rz-base-background-color" : "--rz-success-lighter";
+        string color = expected.Contains(args.Data) ? "--rz-success-lighter" : "--rz-danger-lighter";
         string style = $"background-color: var({color});";
         args.Attributes.Add("style", style);
     }
