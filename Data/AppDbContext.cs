@@ -15,5 +15,8 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<Test>().OwnsMany(x => x.Incidents, i => i.ToJson());
         modelBuilder.Entity<Test>().OwnsMany(x => x.Patterns, p => { p.ToJson(); p.OwnsOne(p => p.Metadata); });
         modelBuilder.Entity<TestRun>().OwnsMany(x => x.FoundIncidents, i => i.ToJson());
+        modelBuilder.Entity<Test>().Property(x => x.ChunkSizeMs).HasDefaultValue(900000);
+        modelBuilder.Entity<Test>().Property(x => x.EventsMaxGapMs).HasDefaultValue(60000);
+        modelBuilder.Entity<Test>().Property(x => x.DefaultEventsGapMs).HasDefaultValue(2000);
     }
 }

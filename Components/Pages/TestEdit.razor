@@ -23,6 +23,18 @@
             <RadzenFormField Text="Query">
                 <RadzenTextArea @bind-Value="test.Query" />
             </RadzenFormField>
+            <RadzenFormField Text="Chunk Size (milliseconds)">
+                <RadzenNumeric @bind-Value="test.ChunkSizeMs" />
+                <RadzenText>@(TimeSpan.FromMilliseconds(test.ChunkSizeMs))</RadzenText>
+            </RadzenFormField>
+            <RadzenFormField Text="Telemetry data gap (milliseconds)">
+                <RadzenNumeric @bind-Value="test.EventsMaxGapMs" />
+                <RadzenText>@(TimeSpan.FromMilliseconds(test.EventsMaxGapMs))</RadzenText>
+            </RadzenFormField>
+            <RadzenFormField Text="Incidents gap (milliseconds)">
+                <RadzenNumeric @bind-Value="test.DefaultEventsGapMs" />
+                <RadzenText>@(TimeSpan.FromMilliseconds(test.DefaultEventsGapMs))</RadzenText>
+            </RadzenFormField>
             <RadzenFormField Text="Patterns">
                 <RadzenDataGrid @ref="patternsGrid" Data="test.Patterns" EditMode="DataGridEditMode.Multiple" TItem="Pattern"
                                 RowUpdate="@PatternsOnUpdateRow" RowCreate="@PatternsOnCreateRow" Sort="@PatternsReset" Page="@PatternsReset" Filter="@PatternsReset">
@@ -333,6 +345,11 @@
         {
             test.Patterns.RemoveAll(p => p is null);
             test.Incidents.RemoveAll(i => i is null);
+            test.Incidents.ForEach(i => 
+            {
+                i.From = i.From.ToUniversalTime();
+                i.To = i.To.ToUniversalTime();
+            });
             AppDbContext.Update(test);
             AppDbContext.SaveChanges();
             NavigationManager.NavigateTo("/tests");

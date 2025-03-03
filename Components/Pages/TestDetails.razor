@@ -15,6 +15,24 @@
             <RadzenText>To: <b>@test.Sink.Name</b></RadzenText>
             <RadzenFieldset Text="Query">
                 <CodeHighlight Code="@test.Query" CodeLanguage="sql" />
+                <RadzenRow>
+                    <RadzenText>
+                        Chunk size (<code>chunkSizeMs</code>): @test.ChunkSizeMs ms
+                        (@TimeSpan.FromMilliseconds(test.ChunkSizeMs))
+                    </RadzenText>
+                </RadzenRow>
+                <RadzenRow>
+                    <RadzenText>
+                        Telemetry data gap (<code>eventsMaxGapMs</code>): @test.EventsMaxGapMs ms
+                        (@TimeSpan.FromMilliseconds(test.EventsMaxGapMs))
+                    </RadzenText>
+                </RadzenRow>
+                <RadzenRow>
+                    <RadzenText>
+                        Incidents gap (<code>defaultEventsGapMs</code>): @test.DefaultEventsGapMs ms
+                        (@TimeSpan.FromMilliseconds(test.DefaultEventsGapMs))
+                    </RadzenText>
+                </RadzenRow>
             </RadzenFieldset>
             <RadzenFieldset Text="Patterns">
                 <RadzenDataList Data="test.Patterns">

@@ -115,7 +115,10 @@ public class RunStatusService : BackgroundService
                     test.Query,
                     DriverName = ClickHouseDriverName,
                     test.DatetimeField,
-                    PartitionFields = Array.Empty<object>()
+                    PartitionFields = Array.Empty<object>(),
+                    test.ChunkSizeMs,
+                    test.EventsMaxGapMs,
+                    test.DefaultEventsGapMs
                 }
             },
             Sinks = (List<object>)[
