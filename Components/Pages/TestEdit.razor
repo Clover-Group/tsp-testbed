@@ -1,5 +1,6 @@
 @page "/tests/edit/{id:guid?}"
 @using Microsoft.EntityFrameworkCore
+@inject IConfiguration Configuration
 @inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
 @inject HighlightService HighlightService
@@ -164,7 +165,15 @@
         }
         else
         {
-            test = new() { Patterns = [], Incidents = [], DatetimeField = "ts" };
+            test = new()
+            {
+                Patterns = [], 
+                Incidents = [], 
+                DatetimeField = "ts",
+                ChunkSizeMs = Configuration.GetSection("RequestParams").GetValue<uint>("ChunkSizeMs", 900000),
+                EventsMaxGapMs = Configuration.GetSection("RequestParams").GetValue<uint>("EventsMaxGapMs", 60000),
+                DefaultEventsGapMs = Configuration.GetSection("RequestParams").GetValue<uint>("DefaultEventsGapMs", 2000),
+            };
         }
     }
 
